@@ -124,25 +124,19 @@ test.describe('Sign-in — Authentication', () => {
   const AUTH_UI_TIMEOUT = 20_000;
   test.setTimeout(120_000);
 
-  // Counts auth tests that have already run in this block so each subsequent
-  // login attempt can be spaced apart from the previous one.
-  let authTestsRun = 0;
-
   let signIn: SignInPage;
 
   test.beforeEach(async ({}, testInfo) => {
-    // The backend rate-limits consecutive sign-in attempts per IP. Space the
-    // serial auth tests apart — and add extra spacing on retries — so each
-    // real login attempt stays under the throttle threshold. The first auth
-    // test needs no pause.
+    // Backend rate-limits consecutive sign-in attempts per IP. First attempt
+    // runs immediately — only pause on retries, since a retry is the signal
+    // that the previous attempt likely tripped the throttle.
     //
     // This pause is a deliberate rate-limit cooldown, NOT a wait for app
     // state — so it uses a plain timer rather than page.waitForTimeout().
-    const gap = 15_000 * authTestsRun + 15_000 * testInfo.retry;
+    const gap = 20_000 * testInfo.retry;
     if (gap > 0) {
       await new Promise((resolve) => setTimeout(resolve, gap));
     }
-    authTestsRun += 1;
     signIn = new SignInPage(getPage());
     await signIn.goto();
   });
