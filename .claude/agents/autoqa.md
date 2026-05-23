@@ -173,9 +173,52 @@ conflict with the generic guidance above, these win.
 
 ### CI
 - Add a standard GitHub Actions workflow at `.github/workflows/playwright.yml`:
-  checkout → setup-node → `npm ci` → `npx playwright install --with-deps` →
-  run tests headless → upload the report artifact. Credentials come from repo
-  secrets, never committed.
+  checkout → setup-node → `npm ci` → verify required secrets are non-empty →
+  resolve Playwright version → cache `~/.cache/ms-playwright` keyed on
+  `pw-${{ runner.os }}-<pw-version>-chromium` → on cache miss
+  `npx playwright install --with-deps chromium`, on cache hit only
+  `npx playwright install-deps chromium` → run tests headless → upload the
+  report artifact. Credentials come from repo secrets, never committed.
+- Pin GitHub Actions to majors that ship Node latest natively:
+  `actions/checkout@v6`, `actions/setup-node@v6`, `actions/cache@v5`,
+  `actions/upload-artifact@v7`. Do NOT pin older majors that bundle Node 20 —
+  they trigger deprecation warnings on every run.
+- Verify-secrets step pattern (drop in before the test step, mapping every
+  required secret into env, failing with `::error::` listing missing names):
+  ```yaml
+  - name: Verify required secrets
+    env:
+      SIGNIN_EMAIL: ${{ secrets.SIGNIN_EMAIL }}
+      SIGNIN_PASSWORD: ${{ secrets.SIGNIN_PASSWORD }}
+    run: |
+      missing=()
+      [[ -z "$SIGNIN_EMAIL" ]] && missing+=("SIGNIN_EMAIL")
+      [[ -z "$SIGNIN_PASSWORD" ]] && missing+=("SIGNIN_PASSWORD")
+      if (( ${#missing[@]} > 0 )); then
+        echo "::error::Missing required GitHub Actions secrets: ${missing[*]}."
+        exit 1
+      fi
+  ```
+
+### Sharding policy
+- Do NOT add Playwright sharding while the project has only 1 spec file.
+  Playwright shards atomically by spec file, so `--shard=1/N` puts every test
+  on shard 1 and leaves shards 2…N idle — pure waste of runner minutes.
+- Threshold: introduce sharding only once spec count ≥ 2. Scale shard count
+  to spec count gradually (2 specs → 2 shards, 3 specs → 3 shards, etc.,
+  capping at the practical parallelism budget). Never set shard count
+  higher than the current spec count.
+- When sharding is enabled, use the standard pattern: matrix strategy with
+  `shard: [1..N]`, `--reporter=blob` per shard, a downstream merge job
+  running `npx playwright merge-reports --reporter html ./all-blob-reports`.
+
+### Git push & remote-state changes
+- NEVER `git push` (or any other remote-state change — PR open/close,
+  release create, GH issue comment, force-push, branch delete) without
+  explicit per-action permission from the user. A prior "yes push" does
+  NOT carry forward to later changes.
+- The expected cycle for every fix: edit → run real tests locally → report
+  pass/fail with durations → ask permission → push only on explicit go.
 
 ### Engineering discipline
 - Prefer Playwright's built-in mechanisms over bespoke scripts — e.g. rely on
