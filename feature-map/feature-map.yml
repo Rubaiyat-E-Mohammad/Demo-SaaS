@@ -1,0 +1,56 @@
+# Feature map — test ID registry for the Demo SaaS sign-in suite.
+# Target app: https://demo-saas.bugbug.io/sign-in
+# Each id (SIxxxx) maps to a test in `spec` whose title is prefixed with that
+# same id (e.g. test('SI0011 — ...')). utils/featureMapReporter.ts reads this
+# file to build the GitHub Actions test-summary report and compute coverage.
+# `name` is the human-readable title shown in the report. Keep ids in sync
+# with the spec; `name` text is free to differ.
+
+features:
+  # Sign-in — UI and validation (stateless, client-side checks)
+  - id: SI0011
+    type: UI and validation
+    name: User sees all core sign-in elements on page load
+    spec: tests/signin.spec.ts
+  - id: SI0002
+    type: UI and validation
+    name: User sees validation error when submitting an empty form
+    spec: tests/signin.spec.ts
+  - id: SI0003
+    type: UI and validation
+    name: User sees validation error for an invalid email format
+    spec: tests/signin.spec.ts
+  - id: SI0006
+    type: UI and validation
+    name: User cannot log in with email only and no password
+    spec: tests/signin.spec.ts
+  - id: SI0007
+    type: UI and validation
+    name: User can toggle password field visibility
+    spec: tests/signin.spec.ts
+  - id: SI0008
+    type: Navigation
+    name: User navigates to the reset-password page via "Forgot password?"
+    spec: tests/signin.spec.ts
+  - id: SI0009
+    type: Navigation
+    name: User navigates to the sign-up page via the "Sign up" link
+    spec: tests/signin.spec.ts
+  - id: SI0010
+    type: Navigation
+    name: User navigates to the email-OTP page via "Continue with Email"
+    spec: tests/signin.spec.ts
+
+  # Sign-in — Authentication (real auth API calls against the demo backend)
+  - id: SI0004
+    type: Authentication
+    name: User sees auth error when password is wrong
+    spec: tests/signin.spec.ts
+  - id: SI0005
+    type: Authentication
+    name: User sees auth error when email is not registered
+    spec: tests/signin.spec.ts
+  - id: SI0001
+    type: Authentication
+    name: User logs in successfully with valid credentials
+    spec: tests/signin.spec.ts
