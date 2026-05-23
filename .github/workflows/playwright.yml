@@ -7,6 +7,11 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+env:
+  # Force JS-based actions onto Node 24 — some @v5 actions (e.g. upload-artifact)
+  # still bundle the Node 20 runtime, which GitHub is deprecating.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   e2e:
     name: E2E (chromium)
