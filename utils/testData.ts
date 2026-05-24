@@ -1,9 +1,7 @@
 /**
- * Env-driven test data for the sign-in suite.
- * Valid credentials are read exclusively from environment variables
- * (loaded from the project-root .env by playwright.config.ts) so the suite
- * ships no hardcoded secrets. The fields below are NOT secrets — they are
- * deliberately invalid inputs used to exercise negative paths.
+ * Env-driven test data. Only `Urls.baseUrl` lives here — derived paths live on
+ * `HelperFunctions`. Valid credentials come from `.env`; negative-path literals
+ * are reviewable named constants.
  */
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -15,7 +13,11 @@ function requireEnv(name: string): string {
   return value;
 }
 
-export const credentials = {
+export const Urls = {
+  baseUrl: 'https://demo-saas.bugbug.io',
+} as const;
+
+export const Credentials = {
   valid: {
     email: requireEnv('SIGNIN_EMAIL'),
     password: requireEnv('SIGNIN_PASSWORD'),
@@ -24,13 +26,4 @@ export const credentials = {
   unregisteredEmail: 'nonexistent-user-9921@example.com',
   invalidFormatEmail: 'notanemail',
   arbitraryPassword: 'SomePass123!',
-} as const;
-
-export const urls = {
-  baseUrl: 'https://demo-saas.bugbug.io',
-  signIn: 'https://demo-saas.bugbug.io/sign-in',
-  resetPasswordPath: '/reset-password',
-  signUpPath: '/sign-up',
-  emailOtpPath: '/email-otp',
-  onboardingPath: '/onboarding',
 } as const;

@@ -20,6 +20,7 @@ export default defineConfig({
   use: {
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    headless: true,
   },
   // Chromium only — auth is backend-driven and identical across browsers.
   projects: [

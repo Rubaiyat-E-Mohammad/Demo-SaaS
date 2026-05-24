@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
+    "test:local": "HEADED=1 playwright test",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report"
   },
