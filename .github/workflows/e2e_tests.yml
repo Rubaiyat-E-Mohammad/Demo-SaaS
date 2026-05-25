@@ -87,23 +87,34 @@ jobs:
           SIGNIN_EMAIL: ${{ secrets.SIGNIN_EMAIL }}
           SIGNIN_PASSWORD: ${{ secrets.SIGNIN_PASSWORD }}
         # `--reporter=blob` writes a per-shard blob that the merge job below
-        # combines into a single HTML report. The feature-map reporter runs
-        # in addition (it appends to $GITHUB_STEP_SUMMARY).
-        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob,./utils/featureMapReporter.ts
+        # combines into a single HTML report + a single feature-map step
+        # summary. The feature-map reporter is intentionally NOT run here —
+        # if it were, each of the N shards would append its own (partial)
+        # table to `$GITHUB_STEP_SUMMARY`, producing N stacked tables on the
+        # run page.
+        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=blob
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
+          # `blob-report-N` artifacts are intermediate plumbing for the merge
+          # job and are deleted at the end of that job — only the merged
+          # `playwright-report` artifact remains visible to reviewers.
           name: blob-report-${{ matrix.shard }}
           path: e2e/blob-report
-          retention-days: 3
+          retention-days: 1
 
   merge-reports:
     name: Merge sharded HTML reports
     if: ${{ !cancelled() }}
     needs: e2e
     runs-on: ubuntu-latest
+    # `actions: write` is required so the cleanup step at the bottom can
+    # delete the intermediate `blob-report-N` artifacts via the GH API.
+    permissions:
+      actions: write
+      contents: read
     defaults:
       run:
         working-directory: e2e
@@ -122,14 +133,17 @@ jobs:
         run: npm ci
 
       - name: Download blob reports from all shards
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: e2e/all-blob-reports
           pattern: blob-report-*
           merge-multiple: true
 
-      - name: Merge into HTML report
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
+      - name: Merge into HTML report + run feature-map reporter once
+        # Both reporters run against the MERGED test result set, so we get
+        # exactly one HTML report directory and exactly one feature-map
+        # table appended to `$GITHUB_STEP_SUMMARY`.
+        run: npx playwright merge-reports --reporter=html,./utils/featureMapReporter.ts ./all-blob-reports
 
       - name: Upload combined HTML report
         if: ${{ !cancelled() }}
@@ -138,3 +152,20 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report
           retention-days: 3
+
+      - name: Delete intermediate blob-report artifacts
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        # Removes every `blob-report-*` artifact from this run so only the
+        # merged `playwright-report` remains visible on the run page.
+        run: |
+          ids=$(gh api "repos/${GH_REPO}/actions/runs/${RUN_ID}/artifacts" \
+            --paginate \
+            --jq '.artifacts[] | select(.name | startswith("blob-report-")) | .id')
+          for id in $ids; do
+            echo "Deleting artifact id=$id"
+            gh api -X DELETE "repos/${GH_REPO}/actions/artifacts/${id}" || true
+          done
