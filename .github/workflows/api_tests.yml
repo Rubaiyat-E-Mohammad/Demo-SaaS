@@ -9,7 +9,7 @@ on:
 
 jobs:
   api:
-    name: API (signin)
+    name: API Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

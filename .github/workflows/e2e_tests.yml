@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   e2e:
-    name: E2E (chromium) shard ${{ matrix.shard }} / ${{ strategy.job-total }}
+    name: E2E Tests shard ${{ matrix.shard }} / ${{ strategy.job-total }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
