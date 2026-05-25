@@ -1,0 +1,10 @@
+{
+  "name": "demo-saas-api-tests",
+  "version": "1.0.0",
+  "description": "Demo SaaS API automation suite (Playwright APIRequestContext).",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  }
+}

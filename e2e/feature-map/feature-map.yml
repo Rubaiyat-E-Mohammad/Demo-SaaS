@@ -1,10 +1,3 @@
-# Feature map — test ID registry for the Demo SaaS sign-in suite.
-# Target app: https://demo-saas.bugbug.io/sign-in
-# Each id (SIxxxx) maps to a test in `spec` whose title is prefixed with that
-# same id followed by " : " (e.g. test('SI0011 : ...')).
-# utils/featureMapReporter.ts reads this file to build the GitHub Actions
-# test-summary report. `name` is display-only and may differ from the title.
-
 features:
   # Sign-in — UI and validation (stateless, client-side checks)
   - id: SI0011

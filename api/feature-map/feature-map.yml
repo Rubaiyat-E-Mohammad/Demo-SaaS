@@ -1,0 +1,29 @@
+features:
+  - id: AS0001
+    type: Authentication
+    name: Valid credentials return 200 with user object
+    spec: tests/signin.spec.ts
+  - id: AS0002
+    type: Authentication
+    name: Wrong password returns 401 INVALID_EMAIL_OR_PASSWORD
+    spec: tests/signin.spec.ts
+  - id: AS0003
+    type: Authentication
+    name: Unregistered email returns 401 INVALID_EMAIL_OR_PASSWORD
+    spec: tests/signin.spec.ts
+  - id: AS0004
+    type: Validation
+    name: Malformed email returns 400 INVALID_EMAIL
+    spec: tests/signin.spec.ts
+  - id: AS0005
+    type: Validation
+    name: Missing email field returns 400 with zod details
+    spec: tests/signin.spec.ts
+  - id: AS0006
+    type: Validation
+    name: Missing password field returns 400 with zod details
+    spec: tests/signin.spec.ts
+  - id: AS0007
+    type: Validation
+    name: Empty JSON body returns 400 with zod details
+    spec: tests/signin.spec.ts

@@ -1,0 +1,69 @@
+name: API Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  api:
+    name: API (signin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      # API suite reuses e2e's node_modules (Playwright APIRequestContext only;
+      # no browser binaries needed). Install e2e deps once, then symlink so
+      # `cd api && npx playwright test` resolves @playwright/test.
+      - name: Install dependencies (e2e)
+        run: npm ci
+        working-directory: e2e
+
+      - name: Link api/node_modules → e2e/node_modules
+        run: ln -s ../e2e/node_modules node_modules
+        working-directory: api
+
+      - name: Verify required secrets
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          SIGNIN_EMAIL: ${{ secrets.SIGNIN_EMAIL }}
+          SIGNIN_PASSWORD: ${{ secrets.SIGNIN_PASSWORD }}
+        run: |
+          missing=()
+          [[ -z "$BASE_URL" ]] && missing+=("BASE_URL")
+          [[ -z "$SIGNIN_EMAIL" ]] && missing+=("SIGNIN_EMAIL")
+          [[ -z "$SIGNIN_PASSWORD" ]] && missing+=("SIGNIN_PASSWORD")
+          if (( ${#missing[@]} > 0 )); then
+            echo "::error::Missing required GitHub Actions secrets: ${missing[*]}. Set them in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "All required secrets present."
+
+      - name: Run API tests
+        working-directory: api
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          SIGNIN_EMAIL: ${{ secrets.SIGNIN_EMAIL }}
+          SIGNIN_PASSWORD: ${{ secrets.SIGNIN_PASSWORD }}
+        # featureMapReporter appends the API test summary to
+        # $GITHUB_STEP_SUMMARY so it renders inline on the run page.
+        run: npx playwright test
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-playwright-report
+          path: api/playwright-report/
+          retention-days: 3

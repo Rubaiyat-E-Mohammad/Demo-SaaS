@@ -14,13 +14,20 @@ function requireEnv(name: string): string {
 }
 
 export const Urls = {
-  baseUrl: 'https://demo-saas.bugbug.io',
+  get baseUrl() {
+    return requireEnv('BASE_URL');
+  },
 } as const;
 
 export const Credentials = {
-  valid: {
-    email: requireEnv('SIGNIN_EMAIL'),
-    password: requireEnv('SIGNIN_PASSWORD'),
+  // Lazy getter so the IDE / Playwright extension can import this module
+  // for test discovery without `.env` loaded. The error fires only when a
+  // test actually reads `Credentials.valid`.
+  get valid() {
+    return {
+      email: requireEnv('SIGNIN_EMAIL'),
+      password: requireEnv('SIGNIN_PASSWORD'),
+    };
   },
   wrongPassword: 'WrongPassword123!',
   unregisteredEmail: 'nonexistent-user-9921@example.com',
