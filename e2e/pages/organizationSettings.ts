@@ -71,6 +71,9 @@ export class OrganizationSettingsPage extends HelperFunctions {
   }
 
   async assertAdminRoleBadgeVisible() {
-    await this.validateAny(Selectors.ticketsList.adminRoleLabel);
+    // assertionValidate auto-waits through the Mantine Select hydration
+    // transition (paragraph → input). validateAny would fire on first
+    // count() and miss the hydrated state on slow CI runners.
+    await this.assertionValidate(Selectors.organizationSettings.memberRoleAdminInput);
   }
 }

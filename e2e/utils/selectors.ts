@@ -43,7 +43,6 @@ export const Selectors = {
     statusBadgeAny: '[data-testid="ticket-status"]',
     newTicketLink: 'role=link[name="New"]',
     headerActiveTab: 'header [role="tab"][aria-selected="true"]',
-    adminRoleLabel: 'main >> text=Admin',
     // The "Tickets" / "Settings" header tabs (Mantine tab role) — scoped to
     // the document-level header so they don't collide with the sidebar's
     // "Tickets" NavLink which has no role=tab.
@@ -138,6 +137,19 @@ export const Selectors = {
     dialogInvalidEmailError: '[role="dialog"] >> text=Invalid email',
     roleOptionAdmin: 'role=option[name="Admin"]',
     roleOptionMember: 'role=option[name="Member"]',
+    // The member-roster row renders the role through two paint phases:
+    //   1. Initial: `<p>Admin</p>` (Mantine Text placeholder while the
+    //      members query is hydrating).
+    //   2. Hydrated: `<input class="mantine-Select-input" readonly value="Admin">`
+    //      (Mantine Select once data is in).
+    // Playwright's `text=Admin` engine matches visible TEXT NODES — input
+    // `value` is not a text node. CI is slower than local, so it tends to
+    // snapshot during phase 1 (`<p>`) while a fast local run lands in
+    // phase 2 (`<input>`). Anchor specifically on the hydrated Select
+    // input and let `assertionValidate` auto-wait through the transition.
+    // The `.mantine-Select-input` class scopes past the `<input type="hidden">`
+    // form field that also carries `value="Admin"`.
+    memberRoleAdminInput: 'main input.mantine-Select-input[value="Admin"]',
   },
 
   /*** Manage account (/manage-account) ***/
