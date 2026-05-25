@@ -17,6 +17,19 @@ export class HelperFunctions {
   readonly signUpPage: string = Urls.baseUrl + '/sign-up';
   readonly emailOtpPage: string = Urls.baseUrl + '/email-otp';
   readonly onboardingPage: string = Urls.baseUrl + '/onboarding';
+  readonly createOrganizationPage: string = Urls.baseUrl + '/create-organization';
+  readonly manageAccountPage: string = Urls.baseUrl + '/manage-account';
+  readonly homePage: string = Urls.baseUrl + '/';
+  // Org-scoped URL factories — every authenticated app surface lives under /<slug>.
+  ticketsListPage(slug: string): string {
+    return `${Urls.baseUrl}/${slug}/tickets`;
+  }
+  newTicketPage(slug: string): string {
+    return `${Urls.baseUrl}/${slug}/tickets/new`;
+  }
+  organizationSettingsPage(slug: string): string {
+    return `${Urls.baseUrl}/${slug}/settings`;
+  }
 
   constructor(page: Page) {
     this.page = page;
@@ -184,5 +197,126 @@ export class HelperFunctions {
       console.log('\x1b[31m%s\x1b[0m', `❌ Failed to validate any ${locator}: ${error}`);
       throw error;
     }
+  }
+
+  async pressKey(key: string) {
+    try {
+      await this.page.keyboard.press(key);
+      await this.waitForLoading();
+      console.log('\x1b[33m%s\x1b[0m', `✅ Pressed ${key}`);
+    } catch (error) {
+      console.log('\x1b[31m%s\x1b[0m', `❌ Failed to press ${key}: ${error}`);
+      throw error;
+    }
+  }
+
+  async reload() {
+    try {
+      await this.page.reload({ waitUntil: 'domcontentloaded' });
+      await this.waitForLoading();
+      console.log('\x1b[34m%s\x1b[0m', `✅ Reloaded ${this.page.url()}`);
+    } catch (error) {
+      console.log('\x1b[31m%s\x1b[0m', `❌ Failed to reload: ${error}`);
+      throw error;
+    }
+  }
+
+  async waitForUrl(pattern: RegExp | string, timeout = 15_000) {
+    try {
+      await this.page.waitForURL(pattern, { timeout });
+      console.log('\x1b[34m%s\x1b[0m', `✅ URL matched ${pattern}`);
+    } catch (error) {
+      console.log('\x1b[31m%s\x1b[0m', `❌ URL never matched ${pattern}: ${error}`);
+      throw error;
+    }
+  }
+
+  async assertUrlMatches(pattern: RegExp | string) {
+    await this.waitForLoading();
+    await expect(this.page).toHaveURL(pattern);
+    console.log('\x1b[34m%s\x1b[0m', `✅ URL matches ${pattern}`);
+  }
+
+  async assertUrlNotMatches(pattern: RegExp | string) {
+    await this.waitForLoading();
+    await expect(this.page).not.toHaveURL(pattern);
+    console.log('\x1b[34m%s\x1b[0m', `✅ URL does not match ${pattern}`);
+  }
+
+  /**
+   * Read the current URL's search params. Returns `null` for absent keys,
+   * matching `URLSearchParams.get()` semantics.
+   */
+  getUrlSearchParam(name: string): string | null {
+    return new URL(this.page.url()).searchParams.get(name);
+  }
+
+  /**
+   * Race a click against a network response so the caller can deterministically
+   * wait for an XHR-style refetch after a UI action. Returns the matched
+   * response or `null` if the wait timed out — callers usually don't care
+   * about the body, they just want the DOM to have settled.
+   */
+  async clickAndWaitForResponse(
+    locator: string,
+    urlSubstring: string,
+    status = 200,
+    timeout = 15_000,
+  ) {
+    const responsePromise = this.page
+      .waitForResponse(
+        (res) => res.url().includes(urlSubstring) && res.status() === status,
+        { timeout },
+      )
+      .catch(() => null);
+    await this.validateAndClick(locator);
+    await responsePromise;
+    await this.waitForLoading();
+  }
+
+  /**
+   * Fill a field, press Enter, and await an XHR-style refetch. Used by
+   * search/filter UIs whose results re-render only after the network call.
+   */
+  async fillSubmitAndWaitForResponse(
+    locator: string,
+    value: string,
+    urlSubstring: string,
+    status = 200,
+    timeout = 15_000,
+  ) {
+    await this.validateAndFillStrings(locator, value);
+    const responsePromise = this.page
+      .waitForResponse(
+        (res) => res.url().includes(urlSubstring) && res.status() === status,
+        { timeout },
+      )
+      .catch(() => null);
+    await this.page.keyboard.press('Enter');
+    await responsePromise;
+    await this.waitForLoading();
+    console.log('\x1b[33m%s\x1b[0m', `✅ Submitted ${locator} and awaited ${urlSubstring}`);
+  }
+
+  async getInputValue(locator: string): Promise<string> {
+    return this.page.locator(locator).inputValue();
+  }
+
+  async getElementCount(locator: string): Promise<number> {
+    return this.page.locator(locator).count();
+  }
+
+  async getAllTextContents(locator: string): Promise<string[]> {
+    return this.page.locator(locator).allTextContents();
+  }
+
+  async assertElementCount(locator: string, expected: number) {
+    await this.waitForLoading();
+    await expect(this.page.locator(locator)).toHaveCount(expected);
+    console.log('\x1b[34m%s\x1b[0m', `✅ ${locator} count = ${expected}`);
+  }
+
+  async getAttribute(locator: string, name: string): Promise<string | null> {
+    return this.page.locator(locator).getAttribute(name);
   }
 }

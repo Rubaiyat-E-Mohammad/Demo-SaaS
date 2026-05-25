@@ -21,15 +21,16 @@ export class ApiHelpers {
   readonly signInEmailEndpoint: string = Urls.baseUrl + '/api/auth/sign-in/email';
   readonly signOutEndpoint: string = Urls.baseUrl + '/api/auth/sign-out';
   readonly sessionEndpoint: string = Urls.baseUrl + '/api/auth/get-session';
+  readonly ticketsCreateEndpoint: string = Urls.baseUrl + '/api/trpc/tickets.create?batch=1';
 
   constructor(request: APIRequestContext) {
     this.request = request;
   }
 
-  async postJson(endpoint: string, body: unknown): Promise<APIResponse> {
+  async postJson(endpoint: string, body: unknown, headers: Record<string, string> = {}): Promise<APIResponse> {
     try {
       console.log('\x1b[34m%s\x1b[0m', `→ POST ${endpoint}`);
-      const res = await this.request.post(endpoint, { data: body as object });
+      const res = await this.request.post(endpoint, { data: body as object, headers });
       console.log('\x1b[35m%s\x1b[0m', `← ${res.status()} ${endpoint}`);
       return res;
     } catch (error) {

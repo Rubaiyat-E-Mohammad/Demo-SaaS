@@ -46,3 +46,171 @@ features:
     type: Authentication
     name: User logs in successfully with valid credentials
     spec: tests/signin.spec.ts
+
+  # Dashboard — layout, navigation, search, filter
+  - id: DB0001
+    type: Layout
+    name: User lands on /<slug>/tickets with all core chrome visible
+    spec: tests/dashboard.spec.ts
+  - id: DB0002
+    type: Navigation
+    name: Header has Tickets and Settings tabs, Tickets is active by default
+    spec: tests/dashboard.spec.ts
+  - id: DB0003
+    type: Navigation
+    name: Sidebar nav exposes Tickets, Organization settings, Manage account, Sign out
+    spec: tests/dashboard.spec.ts
+  - id: DB0004
+    type: Layout
+    name: Seeded sample tickets are findable in the org's ticket list
+    spec: tests/dashboard.spec.ts
+  - id: DB0005
+    type: Navigation
+    name: Clicking "Settings" header tab routes to /<slug>/settings
+    spec: tests/dashboard.spec.ts
+  - id: DB0006
+    type: Navigation
+    name: Clicking "New" routes to /<slug>/tickets/new
+    spec: tests/dashboard.spec.ts
+  - id: DB0007
+    type: Filtering
+    name: Search by title puts the term in ?search and narrows the table
+    spec: tests/dashboard.spec.ts
+  - id: DB0008
+    type: Filtering
+    name: Search with a guaranteed-unique gibberish term yields zero rows
+    spec: tests/dashboard.spec.ts
+  - id: DB0009
+    type: Filtering
+    name: Status filter In Progress sets ?status=InProgress and shows only matching rows
+    spec: tests/dashboard.spec.ts
+  - id: DB0010
+    type: Filtering
+    name: Reverting the status filter to Any clears ?status from the URL
+    spec: tests/dashboard.spec.ts
+
+  # Ticket detail dialog
+  - id: TK0001
+    type: UI and validation
+    name: Clicking a ticket row opens the detail dialog with all core fields
+    spec: tests/ticketDetail.spec.ts
+  - id: TK0002
+    type: Navigation
+    name: URL gains ?selectedId=<id> while the dialog is open
+    spec: tests/ticketDetail.spec.ts
+  - id: TK0003
+    type: UI and validation
+    name: Dialog status button shows the ticket's current status
+    spec: tests/ticketDetail.spec.ts
+  - id: TK0004
+    type: UI and validation
+    name: Opening the status menu reveals all four status options
+    spec: tests/ticketDetail.spec.ts
+  - id: TK0005
+    type: Navigation
+    name: Close (X) button closes the dialog and clears ?selectedId
+    spec: tests/ticketDetail.spec.ts
+  - id: TK0006
+    type: UI and validation
+    name: Empty ticket shows "No comments yet" placeholder and comment input
+    spec: tests/ticketDetail.spec.ts
+
+  # New-ticket form (anonymous public surface)
+  - id: NT0001
+    type: UI and validation
+    name: The submit form renders all four required fields
+    spec: tests/newTicket.spec.ts
+  - id: NT0002
+    type: Validation
+    name: Submitting an empty form shows validation errors on every field
+    spec: tests/newTicket.spec.ts
+  - id: NT0003
+    type: Validation
+    name: Submitting with a malformed reported-by email shows "Invalid email"
+    spec: tests/newTicket.spec.ts
+  - id: NT0004
+    type: Happy Path
+    name: Valid submission shows the success toast and lands on the new ticket's detail page
+    spec: tests/newTicket.spec.ts
+
+  # Organization settings (members roster + add-member dialog)
+  - id: OS0001
+    type: UI and validation
+    name: Page renders the "Organization members" heading and an "Add member" button
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0002
+    type: UI and validation
+    name: Logged-in user is listed as an Admin in the members roster
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0003
+    type: UI and validation
+    name: '"Add member" opens a dialog with Email + Role inputs and submit button'
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0004
+    type: Validation
+    name: Submitting the Add Member dialog with empty email shows "Invalid email"
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0005
+    type: Validation
+    name: Submitting with a malformed email shows "Invalid email" without sending the invite
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0006
+    type: UI and validation
+    name: Role dropdown exposes both Admin and Member options
+    spec: tests/organizationSettings.spec.ts
+  - id: OS0007
+    type: UI and validation
+    name: Closing the dialog removes it from the DOM
+    spec: tests/organizationSettings.spec.ts
+
+  # Manage account (User details + Security tabs)
+  - id: MA0001
+    type: UI and validation
+    name: User details tab renders First name, Last name, Save
+    spec: tests/manageAccount.spec.ts
+  - id: MA0002
+    type: UI and validation
+    name: First name and Last name are pre-filled from the logged-in user's profile
+    spec: tests/manageAccount.spec.ts
+  - id: MA0003
+    type: Navigation
+    name: The page exposes both "User details" and "Security" tabs
+    spec: tests/manageAccount.spec.ts
+  - id: MA0004
+    type: UI and validation
+    name: Security tab renders Sessions list section heading
+    spec: tests/manageAccount.spec.ts
+  - id: MA0005
+    type: UI and validation
+    name: Password section exposes Current/New inputs + Sign-out-other-sessions checkbox + Change password button
+    spec: tests/manageAccount.spec.ts
+  - id: MA0006
+    type: Validation
+    name: Clicking Change password with empty fields keeps the user on the page
+    spec: tests/manageAccount.spec.ts
+  - id: MA0007
+    type: Navigation
+    name: Switching back to User details tab restores the name form
+    spec: tests/manageAccount.spec.ts
+
+  # Post-login navigation, session persistence, sign-out
+  - id: NV0001
+    type: Session
+    name: Session persists across a full page reload
+    spec: tests/navigation.spec.ts
+  - id: NV0002
+    type: Navigation
+    name: Navigating to /onboarding while signed in with an org redirects to /<slug>/tickets
+    spec: tests/navigation.spec.ts
+  - id: NV0003
+    type: Navigation
+    name: User-menu dropdown lists "Manage account" and "Sign out"
+    spec: tests/navigation.spec.ts
+  - id: NV0004
+    type: Session
+    name: Sign out returns user to home, clears session, and blocks protected URLs
+    spec: tests/navigation.spec.ts
+  - id: NV0005
+    type: Navigation
+    name: Org switcher dropdown shows current org and a "Create organization" option
+    spec: tests/navigation.spec.ts

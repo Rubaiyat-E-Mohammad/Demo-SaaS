@@ -1,4 +1,5 @@
 features:
+  # Sign-in API — POST /api/auth/sign-in/email
   - id: AS0001
     type: Authentication
     name: Valid credentials return 200 with user object
@@ -27,3 +28,29 @@ features:
     type: Validation
     name: Empty JSON body returns 400 with zod details
     spec: tests/signin.spec.ts
+
+  # Tickets API — tRPC tickets.create (anonymous public submit)
+  - id: AT0001
+    type: Happy Path
+    name: Valid payload returns the new ticket with status "New"
+    spec: tests/tickets.spec.ts
+  - id: AT0002
+    type: Validation
+    name: Missing all required fields returns 400 with zod fieldErrors
+    spec: tests/tickets.spec.ts
+  - id: AT0003
+    type: Validation
+    name: Invalid email in reportedBy returns 400 with zod fieldErrors
+    spec: tests/tickets.spec.ts
+  - id: AT0004
+    type: Validation
+    name: Empty inner JSON returns 400 with zod formErrors "Required"
+    spec: tests/tickets.spec.ts
+  - id: AT0005
+    type: Authorization
+    name: Missing x-organization header returns 403 FORBIDDEN
+    spec: tests/tickets.spec.ts
+  - id: AT0006
+    type: Authorization
+    name: Unknown organization slug returns 403 FORBIDDEN
+    spec: tests/tickets.spec.ts
